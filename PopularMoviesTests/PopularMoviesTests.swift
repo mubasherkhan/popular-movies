@@ -6,31 +6,62 @@
 //
 
 import XCTest
+import Combine
+
 @testable import PopularMovies
 
 final class PopularMoviesTests: XCTestCase {
-
+    var viewModel: HomeViewModel!
+    var detailsViewModel: MovieDetailViewModel!
+    var cancellables: Set<AnyCancellable>!
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        viewModel = HomeViewModel()
+        detailsViewModel = MovieDetailViewModel(selectedMovie: Movie(id: 615656))
+        cancellables = Set<AnyCancellable>()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        viewModel = nil
+        cancellables = nil
     }
+    func testGetPopularMovies() {
+           let expectation = XCTestExpectation(description: "Fetching popular movies")
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
+           viewModel.getPopularMovies()
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
+           viewModel.$movies
+                .dropFirst()
+               .sink { movies in
+                   XCTAssertFalse(movies.isEmpty, "Movies should not be empty")
+                   expectation.fulfill()
+               }
+               .store(in: &cancellables)
+
+           wait(for: [expectation], timeout: 5.0)
+       }
+    func testGetMovieDetails() {
+           let expectation = XCTestExpectation(description: "Movies details should not be empty")
+
+            detailsViewModel.getMovieDetails()
+
+        detailsViewModel.$movieDetail
+                .dropFirst()
+               .sink { movieDetail in
+                   XCTAssertNotNil(movieDetail, "Movies should not be empty")
+                   expectation.fulfill()
+               }
+               .store(in: &cancellables)
+
+           wait(for: [expectation], timeout: 5.0)
+       }
+
+       func testSelectedMovieIndex() {
+           XCTAssertEqual(viewModel.selectedMovieIndex, 0, "Initial selectedMovieIndex should be 0")
+
+           viewModel.selectedMovieIndex = 42
+
+           XCTAssertEqual(viewModel.selectedMovieIndex, 42, "Selected movie index should be updated")
+       }
+    
 
 }

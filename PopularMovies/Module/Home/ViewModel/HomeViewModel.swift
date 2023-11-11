@@ -13,10 +13,11 @@ class HomeViewModel : ObservableObject{
     private var cancellables = Set<AnyCancellable>()
     private var currentPage = 0
     private var totalPages = 1
+    var selectedMovieIndex = 0
     
     func getPopularMovies(){
         currentPage += 1
-        let publisher: AnyPublisher<PopularMovies, Error> = NetworkManager.shared.getMethod(url: "https://api.themoviedb.org/3/movie/popular", params: ["page":currentPage])
+        let publisher: AnyPublisher<PopularMovies, Error> = NetworkManager.shared.getMethod(url: Constants.POPULAR_MOVIES_URL, params: ["page":currentPage])
         publisher.sink { completion in
             switch completion{
             case .finished:
